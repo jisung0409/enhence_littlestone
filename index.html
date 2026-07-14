@@ -7,9 +7,63 @@
     <title>최현호 강화하기 - 스타포스 에디션</title>
     <style>
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(220, 20, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(220, 20, 60, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 20, 60, 0);
+            }
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(3px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(1px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
         }
 
         body {
@@ -173,7 +227,8 @@
 </head>
 
 <body>
-    <div id="ranking-box" style="position: fixed; right: 20px; top: 20px; font-size: 0.9em; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #ddd; color: #333; z-index: 10; text-align: center;">
+    <div id="ranking-box"
+        style="position: fixed; right: 20px; top: 20px; font-size: 0.9em; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #ddd; color: #333; z-index: 10; text-align: center;">
         👑 지금까지 강화 1등<br>
         <strong style="color: #ff5722; font-size: 1.2em;">김민호(22강)</strong>
     </div>
@@ -210,7 +265,8 @@
 
         <div id="action-buttons" style="display: flex; flex-direction: column; gap: 10px;">
             <button id="main-btn" class="btn" onclick="tryEnhance(false)">강화하기</button>
-            <button id="beast-btn" class="btn" onclick="tryEnhance(true)" style="background-color: #b71c1c; display: none;">야수의 심장 강화</button>
+            <button id="beast-btn" class="btn" onclick="tryEnhance(true)"
+                style="background-color: #b71c1c; display: none;">야수의 심장 강화</button>
         </div>
         <div id="log"></div>
 
@@ -315,6 +371,30 @@
                     if (!confirm("야수의 심장 강화는 파괴방지권을 사용할 수 없으며, 실패 시 장비가 파괴될 확률이 매우 높습니다. 정말 진행하시겠습니까?")) {
                         return;
                     }
+
+                    // 극적인 연출 시작
+                    let beastBtn = document.getElementById("beast-btn");
+                    document.getElementById("main-btn").style.display = "none"; // 일반 강화 숨김
+
+                    beastBtn.innerText = "야수의 심장 (성공 확률 1% / 파괴 99%)";
+                    beastBtn.style.animation = "pulse 0.1s infinite";
+                    beastBtn.style.backgroundColor = "#ff0000";
+                    beastBtn.disabled = true;
+
+                    let container = document.querySelector(".container");
+                    container.style.animation = "shake 0.1s infinite"; // 흔들림
+
+                    document.body.style.backgroundColor = "#2a0000";
+                    container.style.boxShadow = "0 0 100px #ff0000";
+
+                    // 3.5초 대기 후 결과 처리
+                    setTimeout(() => {
+                        container.style.animation = "none";
+                        beastBtn.disabled = false;
+                        processEnhance(1.0);
+                    }, 3500);
+
+                    return; // 대기 시간 동안 processEnhance 호출 안함
                 }
                 // 야수의 심장은 스타캐치 불가능하므로 바로 강화 진행
                 processEnhance(1.0);
@@ -408,13 +488,20 @@
             // 2. 파괴 판정 (성공 확률 다음 구간부터 파괴 확률만큼)
             else if (random < finalSuccessRate + destroyRate) {
                 let useTicket = document.getElementById("use-ticket-checkbox").checked;
+                let wasLevel24 = (level === 24);
+
                 // 야수의 심장 강화에서는 파괴 방지권 사용 불가
                 if (useTicket && antiDestructTickets > 0 && !isCurrentBeastMode) {
                     antiDestructTickets--;
                     logDiv.innerHTML = `[${timeString}] <span class="log-destroy" style="background-color: #fff3e0; color: #d84315; border: 2px solid #ff9800; font-size: 1.1em; display: inline-block; margin: 2px 0;">🛡️ [파괴 방지 발동!] 파괴 방지권을 사용하여 기적적으로 장비를 보호했습니다! (강화 단계 유지: +${level})</span><br>` + logDiv.innerHTML;
                 } else {
                     level = 0; // 파괴 시 +0으로 초기화
-                    logDiv.innerHTML = `[${timeString}] <span class="log-destroy">💥 [파괴] 장비가 산산조각 났습니다... (+0으로 초기화)</span><br>` + logDiv.innerHTML;
+                    let extraMsg = "";
+                    if (wasLevel24 && isCurrentBeastMode) {
+                        extraMsg = "<br><br><div style='color: #FFD700; font-size: 1.2em; background: #b71c1c; padding: 15px; margin-top: 10px; border-radius: 10px; border: 3px solid #FFD700; font-weight: bold; animation: pulse 0.5s infinite; text-align: center;'>📸 [히든 이벤트] 이 터진 화면을 캡처해서 인증하면 편의점 간식을 사줍니다! 📸</div>";
+                        setTimeout(() => alert("장 비  파 괴\n이 화면 캡처해서 인증하면 명예의 전당 + 편의점 쏩니다"), 600);
+                    }
+                    logDiv.innerHTML = `[${timeString}] <span class="log-destroy">💥 [파괴] 장비가 산산조각 났습니다... (+0으로 초기화)</span>${extraMsg}<br>` + logDiv.innerHTML;
                 }
             }
             // 3. 하락 (또는 실패) 판정
@@ -459,13 +546,13 @@
                 statsBox.style.border = "1px solid #ff0000";
                 statsBox.style.color = "#fff";
                 document.getElementById("name").style.color = "#ffaaaa";
-                
+
                 document.getElementById("prob-success").innerText = "?%";
                 document.getElementById("prob-success").className = "";
                 document.getElementById("prob-success").style.color = "#ff4444";
                 document.getElementById("prob-destroy").innerText = "99%";
-                
-                mainBtn.innerText = "일반 강화 (확률 0%)";
+
+                mainBtn.innerText = "일반 강화 (확률 ?%)";
                 beastBtn.innerText = "야수의 심장 강화 (파괴방지 불가, 확률 3배)";
                 beastBtn.style.animation = "pulse 1s infinite";
                 beastBtn.style.fontSize = "1.1em";
@@ -481,16 +568,16 @@
                 statsBox.style.border = "1px solid #eee";
                 statsBox.style.color = "black";
                 document.getElementById("name").style.color = "#333";
-                
+
                 document.getElementById("prob-success").className = "stat-success";
                 document.getElementById("prob-success").style.color = "blue";
-                
+
                 mainBtn.innerText = "강화하기";
                 beastBtn.innerText = "야수의 심장 강화 (확률 2.5배, 파괴방지 불가)";
                 beastBtn.style.animation = "none";
                 beastBtn.style.fontSize = "1.2em";
                 beastBtn.style.padding = "15px 30px";
-                
+
                 if (level < names.length - 1) {
                     let stats = getStats(level);
                     document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 15 ? " (★1.3배 가능)" : "");

@@ -188,6 +188,9 @@
                 <label style="cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px;">
                     <input type="checkbox" id="use-ticket-checkbox" checked> 자동 사용
                 </label>
+                <label style="cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px; margin-left: 5px;">
+                    <input type="checkbox" id="use-starcatch-checkbox" checked> 스타캐치 (15강~)
+                </label>
             </div>
         </div>
 
@@ -287,11 +290,12 @@
         function tryEnhance() {
             if (level >= names.length - 1) return;
 
-            // 12강(+12) 이상부터는 스타캐치 미니게임 실행
-            if (level >= 12) {
+            // 15강(+15) 이상부터는 스타캐치 미니게임 실행 (체크 시)
+            let useStarcatch = document.getElementById("use-starcatch-checkbox").checked;
+            if (level >= 15 && useStarcatch) {
                 startStarcatch();
             } else {
-                // 12강 미만은 바로 강화 진행 (보정률 1.0배)
+                // 스타캐치를 껐거나 15강 미만은 바로 강화 진행 (보정률 1.0배)
                 processEnhance(1.0);
             }
         }
@@ -389,7 +393,7 @@
                 if (level === 24) {
                     document.getElementById("prob-success").innerText = "???%";
                 } else {
-                    document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 12 ? " (★1.3배 가능)" : "");
+                    document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 15 ? " (★1.3배 가능)" : "");
                 }
                 document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
             } else {

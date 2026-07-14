@@ -307,12 +307,12 @@
     <div id="ranking-box"
         style="position: fixed; right: 20px; top: 20px; font-size: 0.9em; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #ddd; color: #333; z-index: 10; text-align: center;">
         👑 지금까지 강화 1등<br>
-        <strong style="color: #ff5722; font-size: 1.2em;">김지성(24강)</strong><br>
-        <div style="margin-top: 5px; font-size: 0.95em; color: #555;">🥈 2등: 김민호, 유주헌, 황성민(23강)</div>
+        <strong style="color: #ff5722; font-size: 1.2em;">김지성, 김민호, 황태환(24강)</strong><br>
+        <div style="margin-top: 5px; font-size: 0.95em; color: #555;">🥈 2등: 유주헌, 황성민(23강)</div>
     </div>
 
     <div class="container">
-        <h1>🗡️ 최현호 강화하기</h1>
+        <h1>🪨 최현호 강화하기</h1>
         <div id="level">+0</div>
 
         <!-- 캐릭터 이미지 공간 -->
@@ -439,7 +439,7 @@
             { success: 15, destroy: 25 }, // +21 -> +22
             { success: 10, destroy: 35 }, // +22 -> +23
             { success: 5, destroy: 40 }, // +23 -> +24
-            { success: 3, destroy: 97 }  // +24 -> +25 (최종 강화)
+            { success: 0, destroy: 97 }  // +24 -> +25 (최종 강화)
         ];
 
         function getStats(lvl) {
@@ -497,7 +497,7 @@
                     let beastBtn = document.getElementById("beast-btn");
                     document.getElementById("main-btn").style.display = "none"; // 일반 강화 숨김
 
-                    beastBtn.innerText = "야수의 심장 (성공 확률 9% / 파괴 91%)";
+                    beastBtn.innerText = "야수의 심장 (성공 확률 3% / 파괴 97%)";
                     beastBtn.style.animation = "pulse 0.1s infinite";
                     beastBtn.style.backgroundColor = "#ff0000";
                     beastBtn.disabled = true;
@@ -572,8 +572,12 @@
             let timeString = new Date().toLocaleTimeString();
 
             if (attempts % 10 === 0) {
-                antiDestructTickets++;
-                logDiv.innerHTML = `[${timeString}] <span style="color: #d84315; font-weight: bold; background: #fff3e0; border: 1px solid #ff9800; padding: 2px 5px; border-radius: 3px; display: inline-block; margin-bottom: 2px;">🎉 10회 강화 시도 달성! 파괴 방지권 1장을 획득했습니다!</span><br>` + logDiv.innerHTML;
+                if (antiDestructTickets < 100) {
+                    antiDestructTickets++;
+                    logDiv.innerHTML = `[${timeString}] <span style="color: #d84315; font-weight: bold; background: #fff3e0; border: 1px solid #ff9800; padding: 2px 5px; border-radius: 3px; display: inline-block; margin-bottom: 2px;">🎉 10회 강화 시도 달성! 파괴 방지권 1장을 획득했습니다!</span><br>` + logDiv.innerHTML;
+                } else {
+                    logDiv.innerHTML = `[${timeString}] <span style="color: #888; font-weight: bold; background: #eee; border: 1px solid #ccc; padding: 2px 5px; border-radius: 3px; display: inline-block; margin-bottom: 2px;">⚠️ 10회 강화 시도 달성! 파괴 방지권이 최대치(100장)에 도달했습니다.</span><br>` + logDiv.innerHTML;
+                }
             }
 
             let stats = getStats(level);
@@ -582,11 +586,12 @@
             let destroyRate = 0;
 
             if (level === 24) {
-                destroyRate = 97;
                 if (isCurrentBeastMode) {
-                    finalSuccessRate = 9;
-                } else {
                     finalSuccessRate = 3;
+                    destroyRate = 97;
+                } else {
+                    finalSuccessRate = 0;
+                    destroyRate = 97;
                 }
             } else {
                 if (isCurrentBeastMode) {
@@ -624,8 +629,8 @@
                     level = 0; // 파괴 시 +0으로 초기화
                     let extraMsg = "";
                     if (wasLevel24 && isCurrentBeastMode) {
-                        extraMsg = "<br><br><div style='color: #FFD700; font-size: 1.2em; background: #b71c1c; padding: 15px; margin-top: 10px; border-radius: 10px; border: 3px solid #FFD700; font-weight: bold; animation: pulse 0.5s infinite; text-align: center;'>📸 [히든 이벤트] 이 터진 화면을 캡처해서 인증하면 편의점 간식을 사줍니다! 📸</div>";
-                        setTimeout(() => alert("장 비  파 괴\n이 화면 캡처해서 인증하면 명예의 전당 + 편의점 쏩니다"), 600);
+                        extraMsg = "<br><br><div style='color: #FFD700; font-size: 1.2em; background: #b71c1c; padding: 15px; margin-top: 10px; border-radius: 10px; border: 3px solid #FFD700; font-weight: bold; animation: pulse 0.5s infinite; text-align: center;'> 언제까지 시도할려고? </div>";
+                        setTimeout(() => alert("장 비  파 괴"), 600);
                     }
                     logDiv.innerHTML = `[${timeString}] <span class="log-destroy">💥 [파괴] 장비가 산산조각 났습니다... (+0으로 초기화)</span>${extraMsg}<br>` + logDiv.innerHTML;
                 }
@@ -729,16 +734,16 @@
                 statsBox.style.color = "#fff";
                 document.getElementById("name").style.color = "#ffaaaa";
 
-                document.getElementById("prob-success").innerText = "3%";
+                document.getElementById("prob-success").innerText = "??";
                 document.getElementById("prob-success").className = "";
                 document.getElementById("prob-success").style.color = "#ff4444";
-                document.getElementById("prob-destroy").innerText = "97%";
+                document.getElementById("prob-destroy").innerText = "??";
 
                 if (!isLocked) {
-                    mainBtn.innerText = "일반 강화 (확률 3%)";
+                    mainBtn.innerText = "일반 강화 (확률 ??)";
                     mainBtn.disabled = false;
                 }
-                beastBtn.innerText = "야수의 심장 강화 (파괴방지 불가, 확률 3배)";
+                beastBtn.innerText = "야수의 심장 강화 (파괴방지 불가, 숨겨진 확률)";
                 if (!isLocked) beastBtn.disabled = false;
                 beastBtn.style.animation = "pulse 1s infinite";
                 beastBtn.style.fontSize = "1.1em";

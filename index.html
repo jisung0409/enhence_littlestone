@@ -124,7 +124,7 @@
             justify-content: center;
             align-items: center;
             color: white;
-            z-index: 10;
+            z-index: 7;
         }
 
         #sf-bar-container {
@@ -170,7 +170,15 @@
     <div class="container">
         <h1>🗡️ 최현호 강화하기</h1>
         <div id="level">+0</div>
-        <div id="name">평범한 고등학생 현호</div>
+
+        <!-- 캐릭터 이미지 공간 -->
+        <div id="image-container"
+            style="width: 200px; height: 200px; margin: 10px auto 15px auto; display: flex; justify-content: center; align-items: center; border: 2px dashed #ccc; border-radius: 10px; background-color: #fafafa;">
+            <span style="color: #999; font-size: 0.9em;">(이미지 예정)</span>
+            <!-- <img id="character-img" src="" alt="캐릭터 이미지" style="width: 100%; height: 100%; object-fit: contain; border-radius: 10px; display: none;"> -->
+        </div>
+
+        <div id="name">불우렁쉥이</div>
 
         <div id="stats-box">
             성공 확률: <span id="prob-success" class="stat-success">90%</span> |
@@ -192,12 +200,17 @@
         </div>
 
         <!-- 퀴즈 모달 -->
-        <div id="quiz-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); border-radius: 15px; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 20;">
+        <div id="quiz-modal"
+            style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); border-radius: 15px; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 20;">
             <h3 style="color: #ff5722; font-size: 1.5em; margin-bottom: 20px;">🚨 마의 14강 돌파 퀴즈 🚨</h3>
-            <p id="quiz-text" style="font-size: 1.2em; margin-bottom: 30px; padding: 0 20px; word-break: keep-all; line-height: 1.5;"></p>
+            <p id="quiz-text"
+                style="font-size: 1.2em; margin-bottom: 30px; padding: 0 20px; word-break: keep-all; line-height: 1.5;">
+            </p>
             <div style="display: flex; gap: 20px;">
-                <button class="btn" style="background-color: #2196F3; width: 100px; font-size: 1.5em;" onclick="submitQuiz('O')">O</button>
-                <button class="btn" style="background-color: #f44336; width: 100px; font-size: 1.5em;" onclick="submitQuiz('X')">X</button>
+                <button class="btn" style="background-color: #2196F3; width: 100px; font-size: 1.5em;"
+                    onclick="submitQuiz('O')">O</button>
+                <button class="btn" style="background-color: #f44336; width: 100px; font-size: 1.5em;"
+                    onclick="submitQuiz('X')">X</button>
             </div>
         </div>
     </div>
@@ -207,34 +220,34 @@
 
         // 1. 총 15단계 (+0 ~ +15) 이름 설정 (총 16개)
         const names = [
-            "어제 릴스에서 본 운동 안한 현호",       // +0
-            "",             // +1
-            "오버워치 골드 현호",         // +2
-            "오버워치 다이아 현호",       // +3
-            "오버워치 그랜드마스터 현호", // +4
-            "코딩 입문한 현호",           // +5
-            "HTML 마스터 현호",           // +6
-            "자바스크립트 깎는 노인 현호",// +7
-            "전교 1등 현호",              // +8
-            "수능 만점자 현호",           // +9
-            "★ 해커톤 대상 수상 현호",    // +10 (여기부터 스타포스 적용)
-            "★ 실리콘밸리 인턴 현호",     // +11
-            "★ 구글 수석 엔지니어 현호",  // +12
-            "★ 일론 머스크 라이벌 현호",  // +13
-            "★ 지구 통치자 최현호",       // +14
-            "👑 우주의 신(God) 최현호"    // +15 (만렙)
+            "불우렁쉥이",       // +0
+            "3대 김지성한테 지는 현호",             // +1
+            "100kg 돌파 최현호",         // +2
+            "교장쌤 아니고 최현호",       // +3
+            "그냥 현호", // +4
+            "미친 현호",           // +5
+            "개미 친 현호",           // +6
+            "케이팝데몬헌터스현호",// +7
+            "강화 정복자 최현호",              // +8
+            "아 이름 뭐하지",           // +9
+            "★ 명명백백한 제작의 왕 최현호",    // +10 (여기부터 스타포스 적용)
+            "★★ 도망쳐서 도착한 곳에 현호는 없다",     // +11
+            "★★★ 별을 품은 최현호마스터",  // +12
+            "★★★★ I.. am.. 최현호맨",  // +13
+            "★★★★★ 진정한 현호를 느껴라.. 신라천정",       // +14
+            "👑 최현호 진(眞) + (다음 강화 단계 이름 추천좀)"    // +15 (만렙)
         ];
 
         // 2. 레벨별 확률 설정 (성공 확률, 파괴 확률)
         // 하락 확률은 (100 - 성공 - 파괴)로 자동 계산됨!
         function getStats(lvl) {
-            if (lvl < 3) return { success: 90, destroy: 0 };  // +0 ~ +2
+            if (lvl < 3) return { success: 95, destroy: 0 };  // +0 ~ +2
             if (lvl < 6) return { success: 80, destroy: 0 };  // +3 ~ +5
-            if (lvl < 9) return { success: 60, destroy: 2 };  // +6 ~ +8 (파괴 시작)
-            if (lvl == 9) return { success: 40, destroy: 5 };  // +9 -> +10 가는 길
-            if (lvl < 12) return { success: 20, destroy: 7 }; // +10 ~ +11
-            if (lvl < 14) return { success: 10, destroy: 10 }; // +12 ~ +13
-            return { success: 5, destroy: 15 };               // +14 -> +15 마의 구간
+            if (lvl < 9) return { success: 70, destroy: 1 };  // +6 ~ +8 (파괴 시작)
+            if (lvl == 9) return { success: 55, destroy: 3 };  // +9 -> +10 가는 길
+            if (lvl < 12) return { success: 40, destroy: 5 }; // +10 ~ +11
+            if (lvl < 14) return { success: 25, destroy: 8 }; // +12 ~ +13
+            return { success: 15, destroy: 10 };               // +14 -> +15 마의 구간
         }
 
         // 스타캐치 애니메이션 변수들
@@ -257,11 +270,11 @@
                 return;
             }
 
-            // 10강(+10) 이상부터는 스타캐치 미니게임 실행
-            if (level >= 10) {
+            // 12강(+12) 이상부터는 스타캐치 미니게임 실행
+            if (level >= 12) {
                 startStarcatch();
             } else {
-                // 10강 미만은 바로 강화 진행 (보정률 1.0배)
+                // 12강 미만은 바로 강화 진행 (보정률 1.0배)
                 processEnhance(1.0);
             }
         }
@@ -269,20 +282,20 @@
         function startQuiz() {
             let quizModal = document.getElementById("quiz-modal");
             let quizText = document.getElementById("quiz-text");
-            
+
             currentQuizIndex = Math.floor(Math.random() * quizzes.length);
             quizText.innerText = quizzes[currentQuizIndex].question;
-            
+
             quizModal.style.display = "flex";
         }
 
         function submitQuiz(playerAnswer) {
             let quizModal = document.getElementById("quiz-modal");
             quizModal.style.display = "none";
-            
+
             let quiz = quizzes[currentQuizIndex];
             let isCorrect = quiz.anyAnswer ? true : (playerAnswer === quiz.answer);
-            
+
             if (isCorrect) {
                 alert("정답입니다! 강화를 시도합니다.");
                 startStarcatch();
@@ -371,7 +384,7 @@
 
             if (level < names.length - 1) {
                 let stats = getStats(level);
-                document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 10 ? " (★1.3배 가능)" : "");
+                document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 12 ? " (★1.3배 가능)" : "");
                 document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
             } else {
                 document.getElementById("prob-success").innerText = "-";

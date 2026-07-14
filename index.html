@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>최현호 강화하기 - 스타포스 에디션</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            text-align: center;
+            margin-top: 30px;
+            background-color: #f0f2f5;
+            user-select: none;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: inline-block;
+            width: 400px;
+            position: relative;
+        }
+
+        #level {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #ff5722;
+            margin-bottom: 5px;
+        }
+
+        #name {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            height: 50px;
+        }
+
+        .btn {
+            touch-action: manipulation;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: 0.1s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+            transform: scale(1.02);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        #stats-box {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .stat-success {
+            color: blue;
+            font-weight: bold;
+        }
+
+        .stat-destroy {
+            color: red;
+            font-weight: bold;
+        }
+
+        #log {
+            margin-top: 15px;
+            font-size: 0.85em;
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            background-color: #fafafa;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .log-success {
+            color: blue;
+            font-weight: bold;
+        }
+
+        .log-fail {
+            color: #e65100;
+        }
+
+        .log-destroy {
+            color: red;
+            font-weight: bold;
+            background-color: #ffebee;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        /* 스타포스 미니게임 UI */
+        #starforce-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 15px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+
+        #sf-bar-container {
+            width: 300px;
+            height: 30px;
+            background: #555;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 2px solid #fff;
+        }
+
+        #sf-target {
+            position: absolute;
+            top: 0;
+            left: 120px;
+            /* 초록존 위치 */
+            width: 60px;
+            /* 초록존 너비 */
+            height: 100%;
+            background: #00E676;
+        }
+
+        #sf-cursor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: #FFD600;
+            box-shadow: 0 0 8px #FFD600;
+        }
+
+        .sf-btn {
+            background: #FF9800;
+            width: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🗡️ 최현호 강화하기</h1>
+        <div id="level">+0</div>
+        <div id="name">평범한 고등학생 현호</div>
+
+        <div id="stats-box">
+            성공 확률: <span id="prob-success" class="stat-success">90%</span> |
+            파괴 확률: <span id="prob-destroy" class="stat-destroy">0%</span>
+        </div>
+
+        <button id="main-btn" class="btn" onclick="tryEnhance()">강화하기</button>
+        <div id="log"></div>
+
+        <!-- 메이플 스타캐치 미니게임 창 -->
+        <div id="starforce-modal">
+            <h3>⭐ 스타캐치! ⭐</h3>
+            <p>초록색 영역에 멈추면 성공률 1.3배!</p>
+            <div id="sf-bar-container">
+                <div id="sf-target"></div>
+                <div id="sf-cursor"></div>
+            </div>
+            <button class="btn sf-btn" onclick="stopStarcatch()">멈추기 (Catch!)</button>
+        </div>
+
+        <!-- 퀴즈 모달 -->
+        <div id="quiz-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); border-radius: 15px; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 20;">
+            <h3 style="color: #ff5722; font-size: 1.5em; margin-bottom: 20px;">🚨 마의 14강 돌파 퀴즈 🚨</h3>
+            <p id="quiz-text" style="font-size: 1.2em; margin-bottom: 30px; padding: 0 20px; word-break: keep-all; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 20px;">
+                <button class="btn" style="background-color: #2196F3; width: 100px; font-size: 1.5em;" onclick="submitQuiz('O')">O</button>
+                <button class="btn" style="background-color: #f44336; width: 100px; font-size: 1.5em;" onclick="submitQuiz('X')">X</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let level = 0;
+
+        // 1. 총 15단계 (+0 ~ +15) 이름 설정 (총 16개)
+        const names = [
+            "어제 릴스에서 본 운동 안한 현호",       // +0
+            "",             // +1
+            "오버워치 골드 현호",         // +2
+            "오버워치 다이아 현호",       // +3
+            "오버워치 그랜드마스터 현호", // +4
+            "코딩 입문한 현호",           // +5
+            "HTML 마스터 현호",           // +6
+            "자바스크립트 깎는 노인 현호",// +7
+            "전교 1등 현호",              // +8
+            "수능 만점자 현호",           // +9
+            "★ 해커톤 대상 수상 현호",    // +10 (여기부터 스타포스 적용)
+            "★ 실리콘밸리 인턴 현호",     // +11
+            "★ 구글 수석 엔지니어 현호",  // +12
+            "★ 일론 머스크 라이벌 현호",  // +13
+            "★ 지구 통치자 최현호",       // +14
+            "👑 우주의 신(God) 최현호"    // +15 (만렙)
+        ];
+
+        // 2. 레벨별 확률 설정 (성공 확률, 파괴 확률)
+        // 하락 확률은 (100 - 성공 - 파괴)로 자동 계산됨!
+        function getStats(lvl) {
+            if (lvl < 3) return { success: 90, destroy: 0 };  // +0 ~ +2
+            if (lvl < 6) return { success: 80, destroy: 0 };  // +3 ~ +5
+            if (lvl < 9) return { success: 60, destroy: 2 };  // +6 ~ +8 (파괴 시작)
+            if (lvl == 9) return { success: 40, destroy: 5 };  // +9 -> +10 가는 길
+            if (lvl < 12) return { success: 20, destroy: 7 }; // +10 ~ +11
+            if (lvl < 14) return { success: 10, destroy: 10 }; // +12 ~ +13
+            return { success: 5, destroy: 15 };               // +14 -> +15 마의 구간
+        }
+
+        // 스타캐치 애니메이션 변수들
+        let sfInterval;
+        let cursorPos = 0;
+        let cursorDir = 1;
+        const cursorSpeed = 10; // 커서 움직이는 속도 (높을수록 어려움)
+
+        const quizzes = [
+            { question: "최현호는 미적분이 3등급이다", answer: "O", anyAnswer: false },
+            { question: "최현호는 유주헌보다 키가 작다", answer: "O", anyAnswer: true }
+        ];
+        let currentQuizIndex = -1;
+
+        function tryEnhance() {
+            if (level >= names.length - 1) return;
+
+            if (level === 14) {
+                startQuiz();
+                return;
+            }
+
+            // 10강(+10) 이상부터는 스타캐치 미니게임 실행
+            if (level >= 10) {
+                startStarcatch();
+            } else {
+                // 10강 미만은 바로 강화 진행 (보정률 1.0배)
+                processEnhance(1.0);
+            }
+        }
+
+        function startQuiz() {
+            let quizModal = document.getElementById("quiz-modal");
+            let quizText = document.getElementById("quiz-text");
+            
+            currentQuizIndex = Math.floor(Math.random() * quizzes.length);
+            quizText.innerText = quizzes[currentQuizIndex].question;
+            
+            quizModal.style.display = "flex";
+        }
+
+        function submitQuiz(playerAnswer) {
+            let quizModal = document.getElementById("quiz-modal");
+            quizModal.style.display = "none";
+            
+            let quiz = quizzes[currentQuizIndex];
+            let isCorrect = quiz.anyAnswer ? true : (playerAnswer === quiz.answer);
+            
+            if (isCorrect) {
+                alert("정답입니다! 강화를 시도합니다.");
+                startStarcatch();
+            } else {
+                alert("오답입니다! 장비가 파괴됩니다...");
+                level = 0;
+                let logDiv = document.getElementById("log");
+                let timeString = new Date().toLocaleTimeString();
+                logDiv.innerHTML = `[${timeString}] <span class="log-destroy">💥 [파괴] 퀴즈 오답으로 장비가 산산조각 났습니다... (+0으로 초기화)</span><br>` + logDiv.innerHTML;
+                updateUI();
+            }
+        }
+
+        // 스타캐치 시작
+        function startStarcatch() {
+            document.getElementById("starforce-modal").style.display = "flex";
+            cursorPos = 0;
+            cursorDir = 1;
+
+            clearInterval(sfInterval);
+            sfInterval = setInterval(() => {
+                cursorPos += cursorSpeed * cursorDir;
+                if (cursorPos >= 292 || cursorPos <= 0) { // 300px(컨테이너) - 8px(커서)
+                    cursorDir *= -1;
+                }
+                document.getElementById("sf-cursor").style.left = cursorPos + "px";
+            }, 10);
+        }
+
+        // 스타캐치 멈추기 버튼 눌렀을 때
+        function stopStarcatch() {
+            clearInterval(sfInterval);
+            document.getElementById("starforce-modal").style.display = "none";
+
+            // 초록존 위치: 120px ~ 180px (target의 left: 120, width: 60)
+            let isSuccess = (cursorPos >= 115 && cursorPos <= 175);
+            let multiplier = isSuccess ? 1.3 : 1.0;
+
+            if (isSuccess) {
+                alert("✨ 스타캐치 성공! (성공 확률 1.3배 적용)");
+            } else {
+                alert("💦 스타캐치 실패... (기본 확률로 진행)");
+            }
+
+            processEnhance(multiplier);
+        }
+
+        // 실제 강화 계산 로직
+        function processEnhance(multiplier) {
+            let stats = getStats(level);
+
+            // 스타캐치 1.3배 보정 적용 (최대 100%를 넘지 않음)
+            let finalSuccessRate = Math.min(stats.success * multiplier, 100);
+            let destroyRate = stats.destroy;
+
+            let random = Math.random() * 100; // 0.00 ~ 99.99 난수
+            let logDiv = document.getElementById("log");
+            let timeString = new Date().toLocaleTimeString();
+
+            // 1. 성공 판정
+            if (random < finalSuccessRate) {
+                level++;
+                logDiv.innerHTML = `[${timeString}] <span class="log-success">✨ 강화 성공! (+${level} ${names[level]})</span><br>` + logDiv.innerHTML;
+            }
+            // 2. 파괴 판정 (성공 확률 다음 구간부터 파괴 확률만큼)
+            else if (random < finalSuccessRate + destroyRate) {
+                level = 0; // 파괴 시 +0으로 초기화
+                logDiv.innerHTML = `[${timeString}] <span class="log-destroy">💥 [파괴] 장비가 산산조각 났습니다... (+0으로 초기화)</span><br>` + logDiv.innerHTML;
+            }
+            // 3. 하락 (또는 실패) 판정
+            else {
+                if (level > 0) {
+                    level--;
+                    logDiv.innerHTML = `[${timeString}] <span class="log-fail">💦 강화 실패... 레벨이 하락합니다. (+${level})</span><br>` + logDiv.innerHTML;
+                } else {
+                    logDiv.innerHTML = `[${timeString}] <span class="log-fail">💦 강화 실패... (더 이상 떨어질 곳이 없습니다)</span><br>` + logDiv.innerHTML;
+                }
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById("level").innerText = `+${level}`;
+            document.getElementById("name").innerText = names[level];
+
+            if (level < names.length - 1) {
+                let stats = getStats(level);
+                document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 10 ? " (★1.3배 가능)" : "");
+                document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
+            } else {
+                document.getElementById("prob-success").innerText = "-";
+                document.getElementById("prob-destroy").innerText = "-";
+                let mainBtn = document.getElementById("main-btn");
+                mainBtn.innerText = "👑 강화 마스터 👑";
+                mainBtn.disabled = true;
+                mainBtn.style.backgroundColor = "gray";
+            }
+        }
+    </script>
+</body>
+
+</html>

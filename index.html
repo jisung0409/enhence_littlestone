@@ -223,6 +223,83 @@
             background: #FF9800;
             width: 80%;
         }
+
+        /* 25강 전용 테마 CSS */
+        @keyframes galaxyBg {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes floatEffect {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        @keyframes textGlowEffect {
+            0% {
+                text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+            }
+
+            50% {
+                text-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff;
+            }
+
+            100% {
+                text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+            }
+        }
+
+        .theme-25-body {
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #050505) !important;
+            background-size: 400% 400% !important;
+            animation: galaxyBg 10s ease infinite !important;
+            color: white !important;
+        }
+
+        .theme-25-container {
+            background: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 0 60px rgba(138, 43, 226, 0.9) !important;
+            animation: floatEffect 4s ease-in-out infinite !important;
+            color: #e0e0e0 !important;
+        }
+
+        .theme-25-title {
+            color: transparent !important;
+            background: linear-gradient(90deg, #ff00cc, #3333ff, #00ffff) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            animation: textGlowEffect 2s infinite alternate !important;
+        }
+
+        .theme-25-level {
+            color: #fff !important;
+            text-shadow: 0 0 20px #fff, 0 0 30px #ff00ff, 0 0 50px #00ffff !important;
+        }
+
+        .theme-25-stats {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #fff !important;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 
@@ -230,7 +307,8 @@
     <div id="ranking-box"
         style="position: fixed; right: 20px; top: 20px; font-size: 0.9em; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #ddd; color: #333; z-index: 10; text-align: center;">
         👑 지금까지 강화 1등<br>
-        <strong style="color: #ff5722; font-size: 1.2em;">김민호(22강)</strong>
+        <strong style="color: #ff5722; font-size: 1.2em;">김지성(24강)</strong><br>
+        <div style="margin-top: 5px; font-size: 0.95em; color: #555;">🥈 2등: 김민호, 유주헌, 황성민(23강)</div>
     </div>
 
     <div class="container">
@@ -249,16 +327,30 @@
         <div id="stats-box">
             성공 확률: <span id="prob-success" class="stat-success">90%</span> |
             파괴 확률: <span id="prob-destroy" class="stat-destroy">0%</span><br>
-            <div style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <div
+                style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
                 <span
                     style="font-weight: bold; color: #ff9800; background: #fff3e0; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffb74d;">🛡️
                     파괴 방지권: <span id="ticket-count">0</span>장</span>
                 <label style="cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px;">
                     <input type="checkbox" id="use-ticket-checkbox" checked> 자동 사용
                 </label>
-                <label
-                    style="cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px; margin-left: 5px;">
+                <label style="cursor: pointer; font-size: 0.9em; display: flex; align-items: center; gap: 4px;">
                     <input type="checkbox" id="use-starcatch-checkbox" checked> 스타캐치 (15강~)
+                </label>
+                <label
+                    style="font-size: 0.9em; display: flex; align-items: center; gap: 4px; background: #e3f2fd; padding: 2px 6px; border-radius: 4px; border: 1px solid #90caf9;">
+                    🔒 목표 잠금
+                    <select id="lock-target"
+                        style="padding: 2px; border-radius: 4px; border: 1px solid #ccc; outline: none; cursor: pointer;">
+                        <option value="none">사용안함</option>
+                        <option value="15">+15</option>
+                        <option value="16">+16</option>
+                        <option value="17">+17</option>
+                        <option value="18">+18</option>
+                        <option value="19">+19</option>
+                        <option value="20">+20</option>
+                    </select>
                 </label>
             </div>
         </div>
@@ -288,6 +380,7 @@
         let level = 0;
         let attempts = 0;
         let antiDestructTickets = 0;
+        let isLocked = false;
 
         // 1. 총 25단계 (+0 ~ +25) 이름 설정 (총 26개)
         const names = [
@@ -315,8 +408,8 @@
             "🌟🌟 11차원의 존재들마저 경배하는 최현호",             // +21
             "🌟🌟🌟 제작이라는 개념을 넘어서는..?",             // +22
             "🌟🌟🌟🌟 %^&*($#@!_FATAL_ERROR 대상의 이름을 찾을 수 없습니다)",             // +23
-            "🌟🌟🌟🌟🌟 저■■ ■아 ■■이 ■■■■과 다■■ ■■이름■ ■■■■ ■■비■■ 그■ ■름 최현호(마지막 단계에서 공개)",             // +24
-            "♾️ 확률 0%임"             // +25
+            "🌟🌟🌟🌟🌟 저■■ ■아 ■■이 ■■■■과 다■■ ■■이름■ ■■■■ ■■비■■ 그■ ■름 최■호, 그의 진명■ ■■■",             // +24
+            "🌌 [THE CREATOR] 모든 것을 창조해내는 존재, 꼬마돌 🌌"             // +25
         ];
 
         // 2. 레벨별 확률 설정 (현재 레벨에서 다음 레벨로 갈 때의 성공/파괴 확률)
@@ -362,7 +455,35 @@
 
         let isCurrentBeastMode = false;
 
+        function lockEnhanceButton() {
+            isLocked = true;
+            let mainBtn = document.getElementById("main-btn");
+            let beastBtn = document.getElementById("beast-btn");
+
+            mainBtn.disabled = true;
+            beastBtn.disabled = true;
+            mainBtn.style.backgroundColor = "#9e9e9e";
+
+            let countdown = 3;
+            mainBtn.innerText = `🔒 목표(${level}강) 달성! (${countdown}초 대기)`;
+
+            let interval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    mainBtn.innerText = `🔒 목표(${level}강) 달성! (${countdown}초 대기)`;
+                }
+            }, 1000);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                isLocked = false;
+                mainBtn.style.backgroundColor = ""; // 원상복구
+                updateUI(); // 텍스트 등 UI 상태 복구
+            }, 3000);
+        }
+
         function tryEnhance(beastMode = false) {
+            if (isLocked) return;
             if (level >= names.length - 1) return;
             isCurrentBeastMode = beastMode;
 
@@ -484,6 +605,11 @@
                 level++;
                 let beastText = isCurrentBeastMode ? " (야수의 심장)" : "";
                 logDiv.innerHTML = `[${timeString}] <span class="log-success">✨ 강화 성공!${beastText} (+${level} ${names[level]})</span><br>` + logDiv.innerHTML;
+
+                let lockTarget = document.getElementById("lock-target").value;
+                if (lockTarget !== "none" && level === parseInt(lockTarget)) {
+                    lockEnhanceButton();
+                }
             }
             // 2. 파괴 판정 (성공 확률 다음 구간부터 파괴 확률만큼)
             else if (random < finalSuccessRate + destroyRate) {
@@ -529,13 +655,68 @@
             let title = document.querySelector("h1");
             let statsBox = document.getElementById("stats-box");
 
+            // 클래스 및 스타일 초기화 (25강/24강 효과 등 해제)
+            document.body.className = "";
+            document.body.style.backgroundColor = "#f0f2f5";
+            container.className = "container";
+            container.style.backgroundColor = "white";
+            container.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+            container.style.color = "black";
+            title.className = "";
+            title.style.color = "black";
+            document.getElementById("level").className = "";
+            statsBox.className = "";
+            statsBox.style.backgroundColor = "#f9f9f9";
+            statsBox.style.border = "1px solid #eee";
+            statsBox.style.color = "black";
+            document.getElementById("name").style.color = "#333";
+            document.getElementById("name").style.textShadow = "none";
+
+            mainBtn.onclick = () => tryEnhance(false);
+            mainBtn.style.background = "";
+            mainBtn.style.border = "none";
+            mainBtn.style.boxShadow = "";
+            mainBtn.style.color = "white";
+
             if (level >= 20 && level < names.length - 1) {
                 beastBtn.style.display = "block";
             } else {
                 beastBtn.style.display = "none";
             }
 
-            if (level === 24) {
+            if (level === 25) {
+                // 우주 창조신 테마 (25강)
+                document.body.className = "theme-25-body";
+                document.body.style.backgroundColor = "transparent";
+                container.className = "container theme-25-container";
+                title.className = "theme-25-title";
+                document.getElementById("level").className = "theme-25-level";
+                statsBox.className = "theme-25-stats";
+                document.getElementById("name").style.color = "#fff";
+                document.getElementById("name").style.textShadow = "0 0 15px #00ffff, 0 0 25px #ff00ff";
+
+                document.getElementById("prob-success").innerText = "∞";
+                document.getElementById("prob-success").className = "stat-success";
+                document.getElementById("prob-success").style.color = "#00ffff";
+                document.getElementById("prob-destroy").innerText = "0%";
+
+                if (!isLocked) {
+                    mainBtn.innerText = "🌌 새로운 우주 창조 (환생) 🌌";
+                    mainBtn.disabled = false;
+                }
+                mainBtn.style.background = "linear-gradient(45deg, #ff00cc, #3333ff)";
+                mainBtn.style.boxShadow = "0 0 20px #ff00cc";
+
+                mainBtn.onclick = () => {
+                    if (confirm("그의 진명을 알게된 당신, 모든 차원을 붕괴시키고 직접 새로운 우주를 창조하시겠습니까? (현재 우주의 창조자를 찾아와주세요)")) {
+                        level = 0;
+                        attempts = 0;
+                        antiDestructTickets = 0;
+                        document.getElementById("log").innerHTML = `<span style="color: #8a2be2; font-weight: bold; font-size: 1.1em; background: #f3e5f5; padding: 2px 5px; border-radius: 4px;">🌌 빅뱅 발생... 새로운 우주가 탄생했습니다. (+0)</span><br>`;
+                        updateUI();
+                    }
+                };
+            } else if (level === 24) {
                 // 제단 테마 (알터)
                 document.body.style.backgroundColor = "#000";
                 container.style.backgroundColor = "#1a0505";
@@ -552,44 +733,33 @@
                 document.getElementById("prob-success").style.color = "#ff4444";
                 document.getElementById("prob-destroy").innerText = "99%";
 
-                mainBtn.innerText = "일반 강화 (확률 ?%)";
+                if (!isLocked) {
+                    mainBtn.innerText = "일반 강화 (확률 ?%)";
+                    mainBtn.disabled = false;
+                }
                 beastBtn.innerText = "야수의 심장 강화 (파괴방지 불가, 확률 3배)";
+                if (!isLocked) beastBtn.disabled = false;
                 beastBtn.style.animation = "pulse 1s infinite";
                 beastBtn.style.fontSize = "1.1em";
                 beastBtn.style.padding = "20px";
             } else {
-                // 일반 테마 복구
-                document.body.style.backgroundColor = "#f0f2f5";
-                container.style.backgroundColor = "white";
-                container.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
-                container.style.color = "black";
-                title.style.color = "black";
-                statsBox.style.backgroundColor = "#f9f9f9";
-                statsBox.style.border = "1px solid #eee";
-                statsBox.style.color = "black";
-                document.getElementById("name").style.color = "#333";
-
+                // 일반 테마
                 document.getElementById("prob-success").className = "stat-success";
                 document.getElementById("prob-success").style.color = "blue";
 
-                mainBtn.innerText = "강화하기";
+                if (!isLocked) {
+                    mainBtn.innerText = "강화하기";
+                    mainBtn.disabled = false;
+                }
                 beastBtn.innerText = "야수의 심장 강화 (확률 2.5배, 파괴방지 불가)";
+                if (!isLocked) beastBtn.disabled = false;
                 beastBtn.style.animation = "none";
                 beastBtn.style.fontSize = "1.2em";
                 beastBtn.style.padding = "15px 30px";
 
-                if (level < names.length - 1) {
-                    let stats = getStats(level);
-                    document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 15 ? " (★1.3배 가능)" : "");
-                    document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
-                } else {
-                    document.getElementById("prob-success").innerText = "-";
-                    document.getElementById("prob-destroy").innerText = "-";
-                    mainBtn.innerText = "👑 강화 마스터 👑";
-                    mainBtn.disabled = true;
-                    mainBtn.style.backgroundColor = "gray";
-                    beastBtn.style.display = "none";
-                }
+                let stats = getStats(level);
+                document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 15 ? " (★1.3배 가능)" : "");
+                document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
             }
         }
     </script>

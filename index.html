@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>최현호 강화하기 - 스타포스 에디션</title>
     <style>
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(220, 20, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0); }
+        }
+
         body {
             font-family: 'Malgun Gothic', sans-serif;
             text-align: center;
@@ -167,6 +173,11 @@
 </head>
 
 <body>
+    <div id="ranking-box" style="position: fixed; right: 20px; top: 20px; font-size: 0.9em; background: rgba(255, 255, 255, 0.9); padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #ddd; color: #333; z-index: 10; text-align: center;">
+        👑 지금까지 강화 1등<br>
+        <strong style="color: #ff5722; font-size: 1.2em;">김민호(22강)</strong>
+    </div>
+
     <div class="container">
         <h1>🗡️ 최현호 강화하기</h1>
         <div id="level">+0</div>
@@ -178,7 +189,7 @@
             <!-- <img id="character-img" src="" alt="캐릭터 이미지" style="width: 100%; height: 100%; object-fit: contain; border-radius: 10px; display: none;"> -->
         </div>
 
-        <div id="name">최현호</div>
+        <div id="name">불우렁쉥이</div>
 
         <div id="stats-box">
             성공 확률: <span id="prob-success" class="stat-success">90%</span> |
@@ -197,7 +208,10 @@
             </div>
         </div>
 
-        <button id="main-btn" class="btn" onclick="tryEnhance()">강화하기</button>
+        <div id="action-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+            <button id="main-btn" class="btn" onclick="tryEnhance(false)">강화하기</button>
+            <button id="beast-btn" class="btn" onclick="tryEnhance(true)" style="background-color: #b71c1c; display: none;">야수의 심장 강화</button>
+        </div>
         <div id="log"></div>
 
         <!-- 메이플 스타캐치 미니게임 창 -->
@@ -290,16 +304,29 @@
         let cursorDir = 1;
         const cursorSpeed = 8; // 커서 움직이는 속도 (높을수록 어려움)
 
-        function tryEnhance() {
-            if (level >= names.length - 1) return;
+        let isCurrentBeastMode = false;
 
-            // 15강(+15) 이상부터는 스타캐치 미니게임 실행 (체크 시)
-            let useStarcatch = document.getElementById("use-starcatch-checkbox").checked;
-            if (level >= 15 && useStarcatch) {
-                startStarcatch();
-            } else {
-                // 스타캐치를 껐거나 15강 미만은 바로 강화 진행 (보정률 1.0배)
+        function tryEnhance(beastMode = false) {
+            if (level >= names.length - 1) return;
+            isCurrentBeastMode = beastMode;
+
+            if (beastMode && level >= 20) {
+                if (level === 24) {
+                    if (!confirm("야수의 심장 강화는 파괴방지권을 사용할 수 없으며, 실패 시 장비가 파괴될 확률이 매우 높습니다. 정말 진행하시겠습니까?")) {
+                        return;
+                    }
+                }
+                // 야수의 심장은 스타캐치 불가능하므로 바로 강화 진행
                 processEnhance(1.0);
+            } else {
+                // 15강(+15) 이상부터는 스타캐치 미니게임 실행 (체크 시)
+                let useStarcatch = document.getElementById("use-starcatch-checkbox").checked;
+                if (level >= 15 && useStarcatch) {
+                    startStarcatch();
+                } else {
+                    // 스타캐치를 껐거나 15강 미만은 바로 강화 진행 (보정률 1.0배)
+                    processEnhance(1.0);
+                }
             }
         }
 
@@ -350,21 +377,39 @@
 
             let stats = getStats(level);
 
-            // 스타캐치 1.3배 보정 적용 (최대 100%를 넘지 않음)
-            let finalSuccessRate = Math.min(stats.success * multiplier, 100);
-            let destroyRate = stats.destroy;
+            let finalSuccessRate = 0;
+            let destroyRate = 0;
+
+            if (level === 24) {
+                destroyRate = 99;
+                if (isCurrentBeastMode) {
+                    finalSuccessRate = 1;
+                } else {
+                    finalSuccessRate = 0;
+                }
+            } else {
+                if (isCurrentBeastMode) {
+                    finalSuccessRate = Math.min(stats.success * 2.5, 100);
+                    destroyRate = stats.destroy;
+                } else {
+                    finalSuccessRate = Math.min(stats.success * multiplier, 100);
+                    destroyRate = stats.destroy;
+                }
+            }
 
             let random = Math.random() * 100; // 0.00 ~ 99.99 난수
 
             // 1. 성공 판정
             if (random < finalSuccessRate) {
                 level++;
-                logDiv.innerHTML = `[${timeString}] <span class="log-success">✨ 강화 성공! (+${level} ${names[level]})</span><br>` + logDiv.innerHTML;
+                let beastText = isCurrentBeastMode ? " (야수의 심장)" : "";
+                logDiv.innerHTML = `[${timeString}] <span class="log-success">✨ 강화 성공!${beastText} (+${level} ${names[level]})</span><br>` + logDiv.innerHTML;
             }
             // 2. 파괴 판정 (성공 확률 다음 구간부터 파괴 확률만큼)
             else if (random < finalSuccessRate + destroyRate) {
                 let useTicket = document.getElementById("use-ticket-checkbox").checked;
-                if (useTicket && antiDestructTickets > 0) {
+                // 야수의 심장 강화에서는 파괴 방지권 사용 불가
+                if (useTicket && antiDestructTickets > 0 && !isCurrentBeastMode) {
                     antiDestructTickets--;
                     logDiv.innerHTML = `[${timeString}] <span class="log-destroy" style="background-color: #fff3e0; color: #d84315; border: 2px solid #ff9800; font-size: 1.1em; display: inline-block; margin: 2px 0;">🛡️ [파괴 방지 발동!] 파괴 방지권을 사용하여 기적적으로 장비를 보호했습니다! (강화 단계 유지: +${level})</span><br>` + logDiv.innerHTML;
                 } else {
@@ -391,21 +436,73 @@
             let ticketElem = document.getElementById("ticket-count");
             if (ticketElem) ticketElem.innerText = antiDestructTickets;
 
-            if (level < names.length - 1) {
-                let stats = getStats(level);
-                if (level === 24) {
-                    document.getElementById("prob-success").innerText = "???%";
-                } else {
-                    document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 15 ? " (★1.3배 가능)" : "");
-                }
-                document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
+            let beastBtn = document.getElementById("beast-btn");
+            let mainBtn = document.getElementById("main-btn");
+            let container = document.querySelector(".container");
+            let title = document.querySelector("h1");
+            let statsBox = document.getElementById("stats-box");
+
+            if (level >= 20 && level < names.length - 1) {
+                beastBtn.style.display = "block";
             } else {
-                document.getElementById("prob-success").innerText = "-";
-                document.getElementById("prob-destroy").innerText = "-";
-                let mainBtn = document.getElementById("main-btn");
-                mainBtn.innerText = "👑 강화 마스터 👑";
-                mainBtn.disabled = true;
-                mainBtn.style.backgroundColor = "gray";
+                beastBtn.style.display = "none";
+            }
+
+            if (level === 24) {
+                // 제단 테마 (알터)
+                document.body.style.backgroundColor = "#000";
+                container.style.backgroundColor = "#1a0505";
+                container.style.boxShadow = "0 0 40px #ff0000";
+                container.style.color = "#ffdddd";
+                title.style.color = "#ff4444";
+                statsBox.style.backgroundColor = "#330a0a";
+                statsBox.style.border = "1px solid #ff0000";
+                statsBox.style.color = "#fff";
+                document.getElementById("name").style.color = "#ffaaaa";
+                
+                document.getElementById("prob-success").innerText = "?%";
+                document.getElementById("prob-success").className = "";
+                document.getElementById("prob-success").style.color = "#ff4444";
+                document.getElementById("prob-destroy").innerText = "99%";
+                
+                mainBtn.innerText = "일반 강화 (확률 0%)";
+                beastBtn.innerText = "야수의 심장 강화 (파괴방지 불가, 확률 3배)";
+                beastBtn.style.animation = "pulse 1s infinite";
+                beastBtn.style.fontSize = "1.1em";
+                beastBtn.style.padding = "20px";
+            } else {
+                // 일반 테마 복구
+                document.body.style.backgroundColor = "#f0f2f5";
+                container.style.backgroundColor = "white";
+                container.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+                container.style.color = "black";
+                title.style.color = "black";
+                statsBox.style.backgroundColor = "#f9f9f9";
+                statsBox.style.border = "1px solid #eee";
+                statsBox.style.color = "black";
+                document.getElementById("name").style.color = "#333";
+                
+                document.getElementById("prob-success").className = "stat-success";
+                document.getElementById("prob-success").style.color = "blue";
+                
+                mainBtn.innerText = "강화하기";
+                beastBtn.innerText = "야수의 심장 강화 (확률 2.5배, 파괴방지 불가)";
+                beastBtn.style.animation = "none";
+                beastBtn.style.fontSize = "1.2em";
+                beastBtn.style.padding = "15px 30px";
+                
+                if (level < names.length - 1) {
+                    let stats = getStats(level);
+                    document.getElementById("prob-success").innerText = `${stats.success}%` + (level >= 15 ? " (★1.3배 가능)" : "");
+                    document.getElementById("prob-destroy").innerText = `${stats.destroy}%`;
+                } else {
+                    document.getElementById("prob-success").innerText = "-";
+                    document.getElementById("prob-destroy").innerText = "-";
+                    mainBtn.innerText = "👑 강화 마스터 👑";
+                    mainBtn.disabled = true;
+                    mainBtn.style.backgroundColor = "gray";
+                    beastBtn.style.display = "none";
+                }
             }
         }
     </script>
